@@ -69,38 +69,3 @@ c.updateInput("proj1/mnist_train_part2.csv")
 c.analyze(True)
 c.updateInput("proj1/mnist_test.csv")
 c.analyze(False)
-
-#inputFile = open("proj1/mnist_train_part1.csv", encoding='utf-8-sig')
-
-#with inputFile as file:
-    #array2d = [[float(digit) for digit in line.split(',')] for line in file]
-
-#data = np.asarray(array2d)
-
-#data[:,1:] = data[:,1:]/255
-
-#thresholds = np.full((len(data), 1), BIAS)
-
-#weights = np.random.uniform(-0.05, 0.05, (10, 785))
-#weights = np.c_[np.ones(10), weights]
-
-#data = np.c_[thresholds, data]
-
-
-#for e in range(EPOCHS):
-#    print("Epoch #: ", e)
-#    correct_response = 0
-#    for n in range(len(data)):
-#        yk = np.zeros(NUM_PERCEPTRONS)
-#        output = np.dot(data[n,], weights.transpose()) + weights.transpose()[0]
-#        yk = np.greater(output, 0).astype(int)
-#        predictions = np.argmax(output)
-#        isequal = np.equal(predictions, data[n,1])
-#        tk = np.zeros(NUM_PERCEPTRONS)
-#        cval = data[n,1].astype(int)
-##        tk[cval] = 1
- #       diff = tk - yk
- #       weights += LR * np.outer(diff, data[n,])
- #       weights.transpose()[0] += LR * diff
- #       correct_response += len(isequal[isequal > 0])
- #   print("Correct: ", correct_response)
