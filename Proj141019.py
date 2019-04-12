@@ -2,13 +2,14 @@ import csv
 import random
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 #For debugging purposes, allows unabridged printing of arrays.
 np.set_printoptions(threshold=sys.maxsize)
 
 #Constants and hyperparameters:
 LR = 0.001
-EPOCHS = 50
+EPOCHS = 1
 BIAS = 0.05
 NUM_PERCEPTRONS = 10
 
@@ -32,7 +33,14 @@ class Classifier(object):
         self.weights = np.random.uniform(-0.05, 0.05, (10, 785))
         self.weights = np.c_[np.ones(10), self.weights]
         self.data = np.c_[self.thresholds, self.data]
-        self.tracker = np.zeros((10,2))  #keeps track of each digit for confusion matrix
+
+        #metadata
+        #confusion matrix: column 0 = number of items seen
+                          #column 1 = number of items classified correctly
+        self.confMatrix = np.zeros((10,2))
+
+        #history: accuracy over time
+        self.history = np.zeros(101)
 
     #Reads in a new data set. Training data sets were split in two to avoid stack overflow
     #errors. Alternative solution could have been to use 16-bit floating point numbers
@@ -51,10 +59,10 @@ class Classifier(object):
         #1) computes dot product
         #2) determines whether dot product plus bias value is above 0 (yk)
         #3) makes prediction and compares with correct value
-        #4) if "testPhase" argument (a boolean) is TRUE then update weights
+        #4) if "training" argument (a boolean) is TRUE then update weights
             #if not (testing phase) then do NOT update weights
         #5) compute accuracy for this epoch
-    def analyze(self, testPhase):
+    def analyze(self, training, orderIndex):
         num_entries = len(self.data)
         for e in range(EPOCHS):
             print("Epoch #: ", e)
@@ -77,35 +85,50 @@ class Classifier(object):
                 #create "correctness" array represented by tk
                 tk = np.zeros(NUM_PERCEPTRONS)
                 cval = self.data[n,1].astype(int)
-                self.tracker[cval, 1] += 1
                 tk[cval] = 1
 
                 #calculate difference (tk - yk)
                 diff = tk - yk
 
-                #conditionally, update weights
-                if(testPhase == True):
+                #total up number of correct responses
+                num_correct = len(isequal[isequal > 0])
+                correct_response += num_correct
+
+                #do different things depending on whether this is test phase or training phase
+                if(training == True):
+                    #update weights
                     self.weights += LR * np.outer(diff, self.data[n,])
                     self.weights.transpose()[0] += LR * diff
-
-                #total up number of correct responses
-                correct_response += len(isequal[isequal > 0])
-                self.tracker[isequal > 0] += 1
+                else:
+                    #update confusion matrix:
+                    self.confMatrix[cval, 1] += 1
+                    self.confMatrix[cval, 0] += num_correct
+                
             #print("Correct: ", correct_response)
-            if(testPhase == False):
-                print("Done with test dataset. Final accuracy: {0:.2f}".format(100*correct_response/num_entries))
-                break
-            print("%: ", float("{0:.2f}".format(100*correct_response/num_entries)))
+            pc = 100 * correct_response/num_entries
 
-    def printTracker(self):
-        print(self.tracker)
+            #if we are using the TEST dataset:
+                #1) update confMatrix (confusion matrix) values
+                #2) end after 1 epoch (no more learning to do)
+            if(training == False):
+                print("Done with test dataset. Final accuracy: {0:.2f}".format(pc))
+                break
+            print("%: ", float("{0:.2f}".format(pc)))
+            self.history[ 50 * orderIndex + e ] = pc
+
+    def printConfMatrix(self):
+        print(self.confMatrix)
+
+    def printHistory(self):
+        plt.plot(self.history)
 
 #Execution begins here.
 c = Classifier()
 c.start("proj1/mnist_train_part1.csv")
-c.analyze(True)
+c.analyze(True, 0)
 c.updateInput("proj1/mnist_train_part2.csv")
-c.analyze(True)
+c.analyze(True, 1)
 c.updateInput("proj1/mnist_test.csv")
-c.analyze(False)
-c.printTracker()
+c.analyze(False, 2)
+c.printConfMatrix()
+c.printHistory()
