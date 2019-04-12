@@ -9,7 +9,7 @@ np.set_printoptions(threshold=sys.maxsize)
 
 #Constants and hyperparameters:
 LR = 0.001
-EPOCHS = 1
+EPOCHS = 50
 BIAS = 0.05
 NUM_PERCEPTRONS = 10
 
@@ -28,6 +28,9 @@ class Classifier(object):
         self.data = np.asarray(self.array2d)
         self.data[:,1:] = self.data[:,1:]/255
 
+        #randomly shuffle data
+        np.random.shuffle(self.data)
+
         #create thresholds array and weights, being sure to add bias.
         self.thresholds = np.full((len(self.data), 1), BIAS)
         self.weights = np.random.uniform(-0.05, 0.05, (10, 785))
@@ -40,7 +43,7 @@ class Classifier(object):
         self.confMatrix = np.zeros((10,2))
 
         #history: accuracy over time
-        self.history = np.zeros(101)
+        self.history = np.zeros((50,3))
 
     #Reads in a new data set. Training data sets were split in two to avoid stack overflow
     #errors. Alternative solution could have been to use 16-bit floating point numbers
@@ -94,33 +97,29 @@ class Classifier(object):
                 num_correct = len(isequal[isequal > 0])
                 correct_response += num_correct
 
+                #update weights
+                self.weights += LR * np.outer(diff, self.data[n,])
+                self.weights.transpose()[0] += LR * diff
+                
                 #do different things depending on whether this is test phase or training phase
-                if(training == True):
-                    #update weights
-                    self.weights += LR * np.outer(diff, self.data[n,])
-                    self.weights.transpose()[0] += LR * diff
-                else:
+                if(training == False):
                     #update confusion matrix:
                     self.confMatrix[cval, 1] += 1
                     self.confMatrix[cval, 0] += num_correct
                 
-            #print("Correct: ", correct_response)
+            #calculate percent correct
             pc = 100 * correct_response/num_entries
 
-            #if we are using the TEST dataset:
-                #1) update confMatrix (confusion matrix) values
-                #2) end after 1 epoch (no more learning to do)
-            if(training == False):
-                print("Done with test dataset. Final accuracy: {0:.2f}".format(pc))
-                break
+            #print and record accuracy
             print("%: ", float("{0:.2f}".format(pc)))
-            self.history[ 50 * orderIndex + e ] = pc
+            self.history[e, orderIndex] = pc
 
     def printConfMatrix(self):
         print(self.confMatrix)
 
     def printHistory(self):
         plt.plot(self.history)
+        plt.show()
 
 #Execution begins here.
 c = Classifier()
