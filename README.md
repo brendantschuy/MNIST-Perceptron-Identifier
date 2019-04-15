@@ -7,3 +7,5 @@ implemented, in part with the help of the computationally powerful NumPy library
 item testing data set is analyzed after the training set is complete.
 
 Accuracy rates after 50 epochs tended to be in the 95-98% range. 
+
+This project was written for CS545 at Portland State University, Spring term 2019. 
